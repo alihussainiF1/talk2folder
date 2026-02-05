@@ -202,4 +202,9 @@ export const api = {
     const token = localStorage.getItem('token')
     return `${API_URL}/api/drive/folders/${folderId}/files/${fileId}/split/${pageNum}?token=${token}`
   },
+
+  getSplitFileDownloadUrl: (relativePath: string) => {
+    const token = localStorage.getItem('token')
+    return `${API_URL}/api/drive/split-files/${relativePath}?token=${token}`
+  },
 }

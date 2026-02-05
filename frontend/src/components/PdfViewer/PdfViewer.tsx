@@ -36,7 +36,7 @@ export function PdfViewer({ folderId, fileId, fileName, onClose }: PdfViewerProp
   const [selectedPages, setSelectedPages] = useState<Set<number>>(new Set())
   const [splitting, setSplitting] = useState(false)
   const [pdfUrl, setPdfUrl] = useState<string>('')
-  const [splitResult, setSplitResult] = useState<{ folder: string; fileName: string; pages: number[] } | null>(null)
+  const [splitResult, setSplitResult] = useState<{ folder: string; fileName: string; filePath: string; pages: number[] } | null>(null)
   const [thumbnailPage, setThumbnailPage] = useState(0)
   const [docLoaded, setDocLoaded] = useState(false)
 
@@ -84,6 +84,7 @@ export function PdfViewer({ folderId, fileId, fileName, onClose }: PdfViewerProp
       setSplitResult({
         folder: result.output_folder,
         fileName: result.file.name,
+        filePath: result.file.path,
         pages: result.file.pages,
       })
       
@@ -357,19 +358,26 @@ export function PdfViewer({ folderId, fileId, fileName, onClose }: PdfViewerProp
               </p>
             </div>
             
-            <div className="bg-blue-50 rounded-lg p-3 mb-4">
-              <div className="flex items-center gap-2 text-sm text-blue-700">
-                <FolderOpen className="w-4 h-4" />
-                <span>Saved to: <code className="bg-blue-100 px-1 rounded">{splitResult.folder}</code></span>
-              </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  const basePath = '/tmp/talk2folder_sessions/'
+                  const relativePath = splitResult.filePath.replace(basePath, '')
+                  const url = api.getSplitFileDownloadUrl(relativePath)
+                  window.open(url, '_blank')
+                }}
+                className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Download
+              </button>
+              <button
+                onClick={() => setSplitResult(null)}
+                className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              >
+                Close
+              </button>
             </div>
-            
-            <button
-              onClick={() => setSplitResult(null)}
-              className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Done
-            </button>
           </div>
         </div>
       )}

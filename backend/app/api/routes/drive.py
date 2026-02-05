@@ -18,7 +18,7 @@ from app.services.ingestion import ingest_folder, ingest_single_file
 from app.services import vector_store
 from pypdf import PdfReader, PdfWriter
 
-AGENT_SESSIONS_DIR = Path("/app/agent_sessions")
+AGENT_SESSIONS_DIR = Path("/tmp/talk2folder_sessions")
 
 router = APIRouter()
 
@@ -406,7 +406,7 @@ async def split_pdf(
             raise HTTPException(status_code=400, detail="Specify pages or set split_all=true")
         
         today = date.today().isoformat()
-        session_dir = Path("/app/agent_sessions") / today
+        session_dir = AGENT_SESSIONS_DIR / today
         session_dir.mkdir(parents=True, exist_ok=True)
         
         writer = PdfWriter()
@@ -464,7 +464,7 @@ async def download_split_page(
         file_name = metadata.get("name", "document.pdf").replace(".pdf", "")
         
         today = session_date or date.today().isoformat()
-        file_path = Path("/app/agent_sessions") / today / file_name / f"{file_name}_page_{page_num}.pdf"
+        file_path = AGENT_SESSIONS_DIR / today / file_name / f"{file_name}_page_{page_num}.pdf"
         
         if file_path.exists():
             return StreamingResponse(
@@ -478,6 +478,29 @@ async def download_split_page(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to download page: {str(e)}")
+
+
+@router.get("/split-files/{filename:path}")
+async def download_split_file(
+    filename: str,
+    user: User = Depends(get_current_user),
+):
+    """Download a split PDF file by its path."""
+    from pathlib import Path
+    
+    file_path = AGENT_SESSIONS_DIR / filename
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Split file not found")
+    
+    if not str(file_path.resolve()).startswith(str(AGENT_SESSIONS_DIR.resolve())):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    return FileResponse(
+        path=str(file_path),
+        media_type="application/pdf",
+        filename=file_path.name,
+    )
 
 
 @router.get("/agent-sessions")
