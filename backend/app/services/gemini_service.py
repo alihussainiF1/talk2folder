@@ -33,9 +33,11 @@ genai.configure(api_key=settings.google_api_key)
 _executor = ThreadPoolExecutor(max_workers=4)
 
 # Size thresholds for fast path vs RAG
-MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10MB per file
-MAX_TOTAL_SIZE_BYTES = 100 * 1024 * 1024  # 100MB total for fast path
-MAX_FILES_FOR_FAST_PATH = 50  # Max files before switching to RAG
+# Gemini Files API supports up to 2GB per file and 20GB total storage
+# We use conservative limits to balance speed vs reliability
+MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024  # 500MB per file (Gemini supports 2GB)
+MAX_TOTAL_SIZE_BYTES = 2 * 1024 * 1024 * 1024  # 2GB total for fast path
+MAX_FILES_FOR_FAST_PATH = 100  # Max files before switching to RAG
 
 
 # MIME types that Gemini supports natively
